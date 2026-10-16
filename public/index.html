@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mira AI 💗</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff0f6;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 500px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: white;
+    }
+
+    header {
+      padding: 20px;
+      background: #e84393;
+      color: white;
+      text-align: center;
+    }
+
+    header h2 { margin: 0 0 5px; }
+    header p { margin: 0; font-size: 14px; }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .message {
+      padding: 12px 15px;
+      margin: 10px 0;
+      border-radius: 16px;
+      max-width: 85%;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .mira {
+      background: #ffe0ed;
+      color: #333;
+      margin-right: auto;
+    }
+
+    .user {
+      background: #e84393;
+      color: white;
+      margin-left: auto;
+    }
+
+    form {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid #eee;
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: 13px;
+      border: 1px solid #ddd;
+      border-radius: 22px;
+      font-size: 16px;
+    }
+
+    button {
+      border: none;
+      background: #e84393;
+      color: white;
+      padding: 0 18px;
+      border-radius: 22px;
+      font-size: 16px;
+    }
+
+    button:disabled { opacity: 0.6; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h2>Mira 💗</h2>
+      <p>Your AI friend</p>
+    </header>
+
+    <div id="messages" aria-live="polite">
+      <div class="message mira">Hey yaar! 💗 Main Mira hoon. Mujhse baat karo!</div>
+    </div>
+
+    <form id="chatForm">
+      <input id="messageInput" placeholder="Message likho..." autocomplete="off" required>
+      <button id="sendButton" type="submit">Send</button>
+    </form>
+  </main>
+
+  <script>
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("messageInput");
+    const messages = document.getElementById("messages");
+    const button = document.getElementById("sendButton");
+
+    function addMessage(text, type) {
+      const div = document.createElement("div");
+      div.className = "message " + type;
+      div.textContent = text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+      return div;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const message = input.value.trim();
+      if (!message) return;
+
+      addMessage(message, "user");
+      input.value = "";
+      button.disabled = true;
+
+      const waiting = addMessage("Mira soch rahi hai... 💗", "mira");
+
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "AI reply nahi aa paya.");
+        }
+
+        waiting.textContent = data.reply || "Yaar, dobara bolo na! 💗";
+      } catch (error) {
+        waiting.textContent = "Sorry yaar, abhi reply nahi aa paaya. Thodi der baad try karo.";
+      } finally {
+        button.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>
