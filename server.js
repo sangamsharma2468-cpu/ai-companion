@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Mira AI server is running! 💗");
+  res.sendFile(__dirname + "/public/index.html");
 });
 
 app.post("/chat", async (req, res) => {
