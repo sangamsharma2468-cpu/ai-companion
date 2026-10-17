@@ -5,6 +5,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static("public"));
 
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/public/index.html");
@@ -21,26 +22,26 @@ app.post("/chat", async (req, res) => {
     }
 
     const response = await fetch(
-      "https://router.huggingface.co/v1/chat/completions",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.HF_TOKEN}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "x-goog-api-key": process.env.GEMINI_API_KEY
         },
         body: JSON.stringify({
-          model: "Qwen/Qwen2.5-7B-Instruct:featherless-ai",
-          messages: [
-            {
-              role: "system",
-              content: "You are Mira, a cute, caring, playful and helpful AI friend. Speak naturally in simple Hinglish. Be warm, supportive and respectful. Never claim to be human."
-            },
-            {
-              role: "user",
-              content: message
-            }
-          ],
-          max_tokens: 300
+          system_instruction: {
+            parts: [{
+              text: "You are Mira, a cute, caring, playful and helpful AI companion. Speak naturally in simple Hinglish. Be warm, supportive, funny and expressive. Use emojis naturally, but do not read emoji names aloud."
+            }]
+          },
+          contents: [{
+            role: "user",
+            parts: [{ text: message }]
+          }],
+          generationConfig: {
+            maxOutputTokens: 300
+          }
         })
       }
     );
@@ -48,15 +49,17 @@ app.post("/chat", async (req, res) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Hugging Face error:", data);
+      console.error("Gemini API error:", data);
       return res.status(502).json({
         error: "Mira AI could not reply. Please try again."
       });
     }
 
-    res.json({
-      reply: data.choices?.[0]?.message?.content || "Yaar, dobara bolo na! 💗"
-    });
+    const reply =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Yaar, dobara bolo na! 💗";
+
+    res.json({ reply });
 
   } catch (error) {
     console.error("Chat error:", error);
