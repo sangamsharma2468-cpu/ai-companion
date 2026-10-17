@@ -23,6 +23,7 @@ app.post("/chat", async (req, res) => {
 
     const response = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.0-flash:generateContent",
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
